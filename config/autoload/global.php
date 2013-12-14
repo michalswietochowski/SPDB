@@ -12,5 +12,15 @@
  */
 
 return array(
-    // ...
+    'db'              => array(
+        'driver'   => 'Pdo_Mysql',
+        'database' => 'spdb',
+        'username' => 'spdb',
+        'password' => 'spdb',
+    ),
+    'service_manager' => array(
+        'factories' => array(
+            'db' => 'Zend\Db\Adapter\AdapterServiceFactory',
+        ),
+    ),
 );
