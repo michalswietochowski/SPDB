@@ -1,0 +1,53 @@
+{{ doctype() }}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    {{ headTitle('See Click Predict Fix Visualizer').setSeparator(' - ').setAutoEscape(false)|raw }}
+    {{ headMeta()
+    .appendName('viewport', 'width=device-width, initial-scale=1.0')
+    .appendHttpEquiv('X-UA-Compatible', 'IE=edge')|raw }}
+    <!-- Styles -->
+    {{ headLink()
+    .prependStylesheet(basePath() ~ '/css/style.css')
+    .prependStylesheet('//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css')|raw }}
+    <!-- Scripts -->
+    {{ headScript()
+    .prependFile('//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js')
+    .prependFile(basePath() ~ '/js/jquery.min.js')
+    .prependFile(basePath() ~ '/js/respond.min.js', 'text/javascript', { conditional: 'lt IE 9' })
+    .prependFile(basePath() ~ '/js/html5shiv.js',   'text/javascript', { conditional: 'lt IE 9' })|raw }}
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{{ url('home') }}">
+                <img src="{{ basePath('img/logo.png') }}"
+                     alt="See Click Predict Fix Visualizer"/>&nbsp;{{ translate('Visualizer') }}
+            </a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="{{ url('home') }}">{{ translate('Home') }}</a></li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+</nav>
+<div class="container">
+    {% block content %}{{ content|raw }}{% endblock %}
+    <hr>
+    <footer>
+        <p>Spatial Databases Project<br/>Michał Świętochowski, Dariusz Dudziński<br/>Warsaw University of Technology, The Faculty of Electronics and Information Technology
+        </p>
+    </footer>
+</div>
+<!-- /container -->
+{{ inlineScript() }}
+</body>
+</html>
