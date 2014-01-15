@@ -1,9 +1,46 @@
 body {
-    padding-top: 60px;
-    padding-bottom: 40px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .navbar-brand img {
     margin: -10px 10px -6px 0;
     height: 30px;
+}
+
+.map-container {
+    position: absolute;
+    top: 50px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 0;
+}
+
+#map-canvas {
+    height: 100%;
+}
+
+.container {
+    z-index: 1000;
+    position: relative;
+}
+
+.authors {
+    bottom: 10px;
+    left: -10px;
+    position: absolute;
+}
+
+.authors .panel-heading, .authors .panel-body {
+padding: 5px;
+font-size: 11px;
+}
+
+.authors .panel-title {
+    font-size: 12px;
+}
+
+.authors .panel-body i {
+    font-size: 10px;
 }
