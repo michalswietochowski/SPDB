@@ -9,6 +9,8 @@
 
 namespace Application;
 
+use Doctrine\DBAL\Event\Listeners\OracleSessionInit;
+use Doctrine\DBAL\Events;
 use Zend\Db\TableGateway\Feature\GlobalAdapterFeature;
 use Zend\Mvc\ModuleRouteListener;
 use Zend\Mvc\MvcEvent;
@@ -21,10 +23,14 @@ class Module
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
 
-        $app = $e->getApplication();
-        $sm = $app->getServiceManager();
+        $app     = $e->getApplication();
+        $sm      = $app->getServiceManager();
         $adapter = $sm->get('db');
         GlobalAdapterFeature::setStaticAdapter($adapter);
+
+        $entityManager        = $sm->get('Doctrine\ORM\EntityManager');
+        $doctrineEventManager = $entityManager->getEventManager();
+        $doctrineEventManager->addEventListener(array(Events::postConnect), new OracleSessionInit());
     }
 
     public function getConfig()
