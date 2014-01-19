@@ -54,6 +54,27 @@ class Issue extends AbstractRepository
 
     /**
      * @param array $params
+     * @return string
+     */
+    public function getSql($params = array())
+    {
+        $zoom = isset($params['zoom']) ? $params['zoom'] : self::DEFAULT_ZOOM;
+
+        $sql = '';
+        if ($zoom <= $this->zoomLevels['country']) {
+            $sql = $this->getMarkersCountQb($params)->getSQL();
+        } else if ($zoom > $this->zoomLevels['country'] && $zoom <= $this->zoomLevels['state']) {
+            $sql = $this->getMarkersForStatesQb($params)->getSQL();
+        } else if ($zoom > $this->zoomLevels['state'] && $zoom <= $this->zoomLevels['county']) {
+            $sql = $this->getMarkersForCountiesQb($params)->getSQL();
+        } else if ($zoom > $this->zoomLevels['county']) {
+            $sql = $this->getMarkersForLocalQb($params)->getSQL();
+        }
+        return $sql;
+    }
+
+    /**
+     * @param array $params
      * @return QueryBuilder
      */
     protected function getMarkersCountQb($params = array())

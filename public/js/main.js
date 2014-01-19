@@ -12,6 +12,7 @@ var SPDB = {
     },
     clusterer: null,
     markers: {},
+    xhr: null,
     init: function () {
         google.visualRefresh = true;
         this.map = new google.maps.Map($('#map-canvas').get(0), this.mapOptions);
@@ -65,25 +66,39 @@ var SPDB = {
         if (this.isZoomLocalLevel(params.zoom) || this.lastZoom != this.getZoomLevelRange(params.zoom)) {
             this.lastZoom = this.getZoomLevelRange(params.zoom);
             this.clusterer.clearMarkers();
-            $.ajax({
+            var xhr = $.ajax({
                 url: '/application/index/get-markers',
                 data: params,
-                timeout: 10000,
+                timeout: 15000,
                 type: 'POST',
                 beforeSend: function (jqXHR, settings) {
+                    if (SPDB.xhr) {
+                        SPDB.xhr.abort();
+                    }
+                    SPDB.xhr = xhr;
                     SPDB.statusLoading();
                 },
                 success: function (data, textStatus, jqXHR) {
                     if (data && data.markers) {
-                        SPDB.statusSuccess('Loaded markers!', '', 3000);
                         SPDB.drawMarkers(data.markers);
+                        if (SPDB.isZoomLocalLevel(params.zoom)) {
+                            SPDB.statusSuccess('Loaded ' + _.size(data.markers) + ' issues!', '', 3000);
+                        } else {
+                            var size = 0;
+                            for (var i in data.markers) {
+                                var marker = data.markers[i];
+                                size += marker.count;
+                            }
+                            SPDB.statusSuccess('Loaded ' + size + ' issues in ' + _.size(data.markers) + ' markers!', '', 3000);
+                        }
                     } else {
                         SPDB.statusError('Unknown error while loading markers');
                     }
+                    SPDB.xhr = null;
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     SPDB.statusError('Error while loading markers: ' + errorThrown);
-                    console.log('error', textStatus, errorThrown);
+                    SPDB.xhr = null;
                 }
             });
         }
@@ -92,8 +107,10 @@ var SPDB = {
         $.extend(SPDB.markers, markers);
         var params = this.getParams();
         if (this.isZoomLocalLevel(params.zoom)) {
+            this.clusterer.setMinimumClusterSize(2);
             this.clusterer.setCalculator(MarkerClusterer.CALCULATOR);
         } else {
+            this.clusterer.setMinimumClusterSize(1);
             this.clusterer.setCalculator(SPDB.clustererCalculator);
         }
         for (var key in markers) {

@@ -13,6 +13,7 @@
     <!-- Scripts -->
     {{ headScript()
     .prependFile('//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js')
+    .prependFile(basePath() ~ '/js/underscore-min.js')
     .prependFile(basePath() ~ '/js/jquery.min.js')
     .prependFile(basePath() ~ '/js/respond.min.js', 'text/javascript', { conditional: 'lt IE 9' })
     .prependFile(basePath() ~ '/js/html5shiv.js',   'text/javascript', { conditional: 'lt IE 9' })|raw }}

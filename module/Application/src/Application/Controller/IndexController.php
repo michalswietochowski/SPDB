@@ -26,8 +26,10 @@ class IndexController extends AbstractActionController
         $services   = $this->getServiceLocator();
         $repository = $services->get('Application\Repository\Issue');
 
-        $markers = $repository->getMarkers($this->params()->fromPost());
-        $jsonModel->setVariables(compact('markers'));
+        $params  = $this->params()->fromPost();
+        $markers = $repository->getMarkers($params);
+        $sql     = $repository->getSql($params);
+        $jsonModel->setVariables(compact('sql', 'markers'));
         return $jsonModel;
     }
 }
