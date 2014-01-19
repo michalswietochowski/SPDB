@@ -2,6 +2,7 @@
 {% do
     headScript()
         .appendFile('//maps.googleapis.com/maps/api/js?key=AIzaSyBygCnThX_0os3vwPheCEhLQZq3WuhePQM&sensor=false')
+        .appendFile('/js/markerclusterer_packed.js')
         .appendFile('/js/main.js')
 %}
 {% block content %}

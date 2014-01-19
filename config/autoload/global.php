@@ -54,7 +54,7 @@ return array(
             )
         ),
     ),
-    'event_manager' => array(
+    'event_manager'   => array(
         'orm_default' => array(
             'subscribers' => array('DoctrineDBALEventListenersOracleSessionInit')
         )
@@ -65,6 +65,12 @@ return array(
         ),
         'invokables' => array(
             'Doctrine\ORM\Mapping\UnderscoreNamingStrategy' => 'Doctrine\ORM\Mapping\UnderscoreNamingStrategy',
+            'Application\Repository\Issue'                  => 'Application\Repository\Issue',
+        ),
+    ),
+    'view_manager'    => array(
+        'strategies' => array(
+            'ViewJsonStrategy',
         ),
     ),
 );

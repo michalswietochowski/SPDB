@@ -44,3 +44,8 @@ font-size: 11px;
 .authors .panel-body i {
     font-size: 10px;
 }
+
+#info {
+    padding: 13px 25px;
+    display: table;
+}

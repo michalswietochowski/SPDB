@@ -10,6 +10,7 @@
 namespace Application\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\JsonModel;
 use Zend\View\Model\ViewModel;
 
 class IndexController extends AbstractActionController
@@ -17,5 +18,16 @@ class IndexController extends AbstractActionController
     public function indexAction()
     {
         return new ViewModel();
+    }
+
+    public function getMarkersAction()
+    {
+        $jsonModel  = new JsonModel();
+        $services   = $this->getServiceLocator();
+        $repository = $services->get('Application\Repository\Issue');
+
+        $markers = $repository->getMarkers($this->params()->fromPost());
+        $jsonModel->setVariables(compact('markers'));
+        return $jsonModel;
     }
 }
