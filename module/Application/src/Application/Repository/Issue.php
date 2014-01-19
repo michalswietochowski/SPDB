@@ -14,6 +14,12 @@ use Doctrine\DBAL\Query\QueryBuilder;
  */
 class Issue extends AbstractRepository
 {
+    /**
+     * Spatial reference system ids
+     */
+    const SRID_WGS84 = 4326;
+    const SRID_NAD83 = 4269;
+
     const DEFAULT_ZOOM = 5;
 
     protected $table = 'US_ISSUES_3';
@@ -116,7 +122,7 @@ class Issue extends AbstractRepository
 
         $markers = array();
         foreach ($rows as $row) {
-            $marker = new Marker($row['ID'], $row['NAME'], $row['LATITUDE'], $row['LONGITUDE'], $row['COUNT']);
+            $marker  = new Marker($row['ID'], $row['NAME'], $row['LATITUDE'], $row['LONGITUDE'], $row['COUNT']);
             $markers = array_merge($markers, $marker->toArray());
         }
         return $markers;
@@ -159,10 +165,53 @@ class Issue extends AbstractRepository
 
         $markers = array();
         foreach ($rows as $row) {
-            $marker = new Marker($row['ID'], $row['NAME'], $row['LATITUDE'], $row['LONGITUDE'], $row['COUNT']);
+            $marker  = new Marker($row['ID'], $row['NAME'], $row['LATITUDE'], $row['LONGITUDE'], $row['COUNT']);
             $markers = array_merge($markers, $marker->toArray());
         }
         return $markers;
+    }
+
+    /**
+     * @param array $params
+     * @return QueryBuilder
+     */
+    protected function getMarkersForLocalQb($params = array())
+    {
+        $sdoRect   = $this->sdoRect(
+            $params['bounds']['sw']['longitude'],
+            $params['bounds']['sw']['latitude'],
+            $params['bounds']['ne']['longitude'],
+            $params['bounds']['ne']['latitude'],
+            self::SRID_WGS84
+        );
+        $sdoInside = sprintf('SDO_INSIDE(i.GEO_POINT, %s) = \'TRUE\'', $sdoRect);
+        return $this->getMarkersCountQb($params)
+            ->select(array(
+                'i.ID',
+                'i.SUMMARY',
+                'i.LATITUDE',
+                'i.LONGITUDE',
+            ))
+            ->where($sdoInside);
+    }
+
+    /**
+     * Get SDO_GEOMETRY for rectangle (bounds)
+     * @param string $swLng south-west longitude
+     * @param string $swLat south-west latitude
+     * @param string $neLng north-east longitude
+     * @param string $neLat north-east latitude
+     * @param int|null $srid spatial reference identification system
+     * @return string oracle sdo_geometry string
+     */
+    protected function sdoRect($swLng, $swLat, $neLng, $neLat, $srid = null)
+    {
+        if (!$srid) {
+            $srid = 'NULL';
+        }
+        $sdoGeometry = "SDO_GEOMETRY(2003, %s, NULL, SDO_ELEM_INFO_ARRAY(1, 1003, 3), %s)";
+        $sdoOrdinate = sprintf('SDO_ORDINATE_ARRAY(%s, %s, %s, %s)', $swLng, $swLat, $neLng, $neLat);
+        return sprintf($sdoGeometry, $srid, $sdoOrdinate);
     }
 
     /**
@@ -171,6 +220,16 @@ class Issue extends AbstractRepository
      */
     public function getMarkersForLocalArea($params = array())
     {
-        return array();
+        $conn = $this->getConnection();
+        $qb   = $this->getMarkersForLocalQb($params);
+        $stmt = $conn->executeQuery($qb->getSQL());
+        $rows = $stmt->fetchAll();
+
+        $markers = array();
+        foreach ($rows as $row) {
+            $marker  = new Marker($row['ID'], $row['SUMMARY'], $row['LATITUDE'], $row['LONGITUDE'], 1);
+            $markers = array_merge($markers, $marker->toArray());
+        }
+        return $markers;
     }
 }

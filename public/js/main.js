@@ -2,7 +2,7 @@ var SPDB = {
     map: null,
     mapOptions: {
         center: new google.maps.LatLng(38.50, -97.50),
-        mapTypeId: google.maps.MapTypeId.TERRAIN,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
         zoom: 5
     },
     clustererOptions: {
@@ -68,7 +68,7 @@ var SPDB = {
             $.ajax({
                 url: '/application/index/get-markers',
                 data: params,
-                timeout: 5000,
+                timeout: 10000,
                 type: 'POST',
                 beforeSend: function (jqXHR, settings) {
                     SPDB.statusLoading();
@@ -90,6 +90,12 @@ var SPDB = {
     },
     drawMarkers: function (markers) {
         $.extend(SPDB.markers, markers);
+        var params = this.getParams();
+        if (this.isZoomLocalLevel(params.zoom)) {
+            this.clusterer.setCalculator(MarkerClusterer.CALCULATOR);
+        } else {
+            this.clusterer.setCalculator(SPDB.clustererCalculator);
+        }
         for (var key in markers) {
             var marker = markers[key];
             var latLng = new google.maps.LatLng(marker.point.latitude, marker.point.longitude);
@@ -137,7 +143,7 @@ var SPDB = {
     zoomLevels: {
         country: 3,
         state: 6,
-        county: 11,
+        county: 12,
         local: 15
     },
     lastZoom: null,
