@@ -84,7 +84,6 @@ class Issue extends AbstractRepository
         $qb->select('NLS_LOWER(i.SUMMARY) TEXT')
             ->from('US_ISSUES_3', 'i')
             ->where('NLS_LOWER(i.SUMMARY) LIKE :search')
-            ->having('COUNT(i.SUMMARY) > :min')
             ->groupBy('NLS_LOWER(i.SUMMARY)')
             ->orderBy('COUNT(i.SUMMARY)', 'DESC');
 
@@ -92,7 +91,6 @@ class Issue extends AbstractRepository
 
         $stmt = $conn->prepare($qb->getSQL());
         $stmt->bindValue('search', '%' . $search . '%');
-        $stmt->bindValue('min', 5);
         $stmt->execute();
         $results = $stmt->fetchAll();
 
@@ -270,9 +268,10 @@ class Issue extends AbstractRepository
             self::SRID_WGS84
         );
         $sdoInside = sprintf('SDO_INSIDE(i.GEO_POINT, %s)', $sdoRect);
+
         $qb = $this->getMarkersCountQb($params);
 
-        $where = $sdoInside;
+        $where = $sdoInside . ' = \'TRUE\'';
         if (isset($params['search'])) {
             $where = $qb->expr()->andX(
                 $qb->expr()->eq($sdoInside, "'TRUE'"),

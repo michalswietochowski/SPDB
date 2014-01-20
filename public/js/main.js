@@ -138,7 +138,8 @@ var SPDB = {
             var markerObject = new google.maps.Marker({
                 position: latLng,
                 map: SPDB.map,
-                title: key
+                title: marker.name,
+                key: key
             });
             this.clusterer.addMarker(markerObject);
         }
@@ -239,7 +240,7 @@ var SPDB = {
      * Clusterer related functions
      */
     clustererCalculator: function (markers, numStyles) {
-        var key = markers.shift().title;
+        var key = markers.shift().key;
         var marker = SPDB.markers[key];
         return {
             text: marker.count,
