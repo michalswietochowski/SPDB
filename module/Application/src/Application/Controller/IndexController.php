@@ -32,4 +32,17 @@ class IndexController extends AbstractActionController
         $jsonModel->setVariables(compact('sql', 'markers'));
         return $jsonModel;
     }
+
+    public function getIssueTypesAction()
+    {
+        $jsonModel = new JsonModel();
+
+        $services   = $this->getServiceLocator();
+        $repository = $services->get('Application\Repository\Issue');
+
+        $params  = $this->params()->fromQuery();
+        $results = $repository->getIssueTypes($params['search']);
+
+        return $jsonModel->setVariables(compact('results'));
+    }
 }

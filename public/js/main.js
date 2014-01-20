@@ -24,6 +24,25 @@ var SPDB = {
         google.maps.event.addListener(this.map, 'idle', function (event) {
             SPDB.refreshMarkers();
         });
+        $('#issue-summary').select2({
+            placeholder: "Issue type",
+            minimumInputLength: 1,
+            allowClear: true,
+            ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                url: '/application/index/get-issue-types',
+                dataType: 'json',
+                data: function (term, page) {
+                    return {
+                        search: term
+                    };
+                },
+                results: function (data, page) { // parse the results into the format expected by Select2.
+                    return data;
+                }
+            }
+        }).on('change', function (event) {
+                SPDB.refreshMarkers();
+            });
 //        google.maps.event.addListener(this.map, 'dragend', function () {
 //            console.log('drag', SPDB.map.getZoom(), SPDB.map.getCenter());
 //        });
@@ -63,7 +82,7 @@ var SPDB = {
     },
     refreshMarkers: function () {
         var params = this.getParams();
-        if (this.isZoomLocalLevel(params.zoom) || this.lastZoom != this.getZoomLevelRange(params.zoom)) {
+        if (params.search || this.isZoomLocalLevel(params.zoom) || this.lastZoom != this.getZoomLevelRange(params.zoom)) {
             this.lastZoom = this.getZoomLevelRange(params.zoom);
             this.clusterer.clearMarkers();
             var xhr = $.ajax({
@@ -146,6 +165,10 @@ var SPDB = {
                 }
             }
         };
+        var search = $('#issue-summary').val();
+        if (search && search != '') {
+            params.search = search;
+        }
         return params;
     },
     /**
@@ -160,7 +183,7 @@ var SPDB = {
     zoomLevels: {
         country: 3,
         state: 6,
-        county: 12,
+        county: 13,
         local: 15
     },
     lastZoom: null,

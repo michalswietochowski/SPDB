@@ -49,3 +49,7 @@ font-size: 11px;
     padding: 13px 25px;
     display: table;
 }
+
+.filter {
+    width: 150px;
+}

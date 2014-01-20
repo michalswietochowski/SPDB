@@ -27,7 +27,7 @@ class Issue extends AbstractRepository
     protected $zoomLevels = array(
         'country' => 3,
         'state'   => 6,
-        'county'  => 12,
+        'county'  => 13,
         'local'   => 15
     );
 
@@ -74,6 +74,37 @@ class Issue extends AbstractRepository
     }
 
     /**
+     * @param $search
+     * @return array
+     */
+    public function getIssueTypes($search)
+    {
+        $conn = $this->getConnection();
+        $qb   = $conn->createQueryBuilder();
+        $qb->select('NLS_LOWER(i.SUMMARY) TEXT')
+            ->from('US_ISSUES_3', 'i')
+            ->where('NLS_LOWER(i.SUMMARY) LIKE :search')
+            ->having('COUNT(i.SUMMARY) > :min')
+            ->groupBy('NLS_LOWER(i.SUMMARY)')
+            ->orderBy('COUNT(i.SUMMARY)', 'DESC');
+
+        //SELECT NLS_LOWER(i.SUMMARY) TEXT FROM US_ISSUES_3 i WHERE NLS_LOWER(i.SUMMARY) LIKE '%graf%' HAVING COUNT(i.SUMMARY) > 5 GROUP BY NLS_LOWER(i.SUMMARY) ORDER BY COUNT(i.SUMMARY) DESC;
+
+        $stmt = $conn->prepare($qb->getSQL());
+        $stmt->bindValue('search', '%' . $search . '%');
+        $stmt->bindValue('min', 5);
+        $stmt->execute();
+        $results = $stmt->fetchAll();
+
+        $values = array();
+        foreach ($results as $result) {
+            $values[] = array('id' => $result['TEXT'], 'text' => $result['TEXT']);
+        }
+
+        return $values;
+    }
+
+    /**
      * @param array $params
      * @return QueryBuilder
      */
@@ -98,8 +129,15 @@ class Issue extends AbstractRepository
 
         $conn = $this->getConnection();
         $qb   = $this->getMarkersCountQb($params);
+        if (isset($params['search'])) {
+            $qb->where('NLS_LOWER(i.SUMMARY) = :search');
+        }
+        $stmt = $conn->prepare($qb->getSQL());
+        if (isset($params['search'])) {
+            $stmt->bindValue('search', $params['search']);
+        }
+        $stmt->execute();
 
-        $stmt   = $conn->executeQuery($qb->getSQL());
         $marker = new Marker($id, $name, $countryLat, $countryLng, $stmt->fetchColumn());
         return $marker->toArray();
     }
@@ -110,7 +148,16 @@ class Issue extends AbstractRepository
      */
     protected function getMarkersForStatesQb($params = array())
     {
-        return $this->getMarkersCountQb($params)
+        $qb = $this->getMarkersCountQb($params);
+
+        $where = 'i.STATE_SKID = s.STATE_SKID';
+        if (isset($params['search'])) {
+            $where = $qb->expr()->andX(
+                $qb->expr()->eq('i.STATE_SKID', 's.STATE_SKID'),
+                $qb->expr()->eq('NLS_LOWER(i.SUMMARY)', ':search')
+            );
+        }
+        return $qb
             ->select(array(
                 'COUNT(i.ID) COUNT',
                 'i.STATE_SKID ID',
@@ -120,7 +167,7 @@ class Issue extends AbstractRepository
                 's.LONGITUDE',
             ))
             ->from('US_STATE', 's')
-            ->where('i.STATE_SKID = s.STATE_SKID')
+            ->where($where)
             ->groupBy(array(
                 'i.STATE_SKID',
                 's.STUSPS',
@@ -138,7 +185,11 @@ class Issue extends AbstractRepository
     {
         $conn = $this->getConnection();
         $qb   = $this->getMarkersForStatesQb($params);
-        $stmt = $conn->executeQuery($qb->getSQL());
+        $stmt = $conn->prepare($qb->getSQL());
+        if (isset($params['search'])) {
+            $stmt->bindValue('search', $params['search']);
+        }
+        $stmt->execute();
         $rows = $stmt->fetchAll();
 
         $markers = array();
@@ -155,7 +206,16 @@ class Issue extends AbstractRepository
      */
     protected function getMarkersForCountiesQb($params = array())
     {
-        return $this->getMarkersCountQb($params)
+        $qb = $this->getMarkersCountQb($params);
+
+        $where = 'i.COUNTY_SKID = c.COUNTY_SKID';
+        if (isset($params['search'])) {
+            $where = $qb->expr()->andX(
+                $qb->expr()->eq('i.COUNTY_SKID', 'c.COUNTY_SKID'),
+                $qb->expr()->eq('NLS_LOWER(i.SUMMARY)', ':search')
+            );
+        }
+        return $qb
             ->select(array(
                 'COUNT(i.ID) COUNT',
                 'i.COUNTY_SKID ID',
@@ -164,7 +224,7 @@ class Issue extends AbstractRepository
                 'c.LONGITUDE',
             ))
             ->from('US_COUNTIES', 'c')
-            ->where('i.COUNTY_SKID = c.COUNTY_SKID')
+            ->where($where)
             ->groupBy(array(
                 'i.COUNTY_SKID',
                 'c.NAME',
@@ -181,7 +241,11 @@ class Issue extends AbstractRepository
     {
         $conn = $this->getConnection();
         $qb   = $this->getMarkersForCountiesQb($params);
-        $stmt = $conn->executeQuery($qb->getSQL());
+        $stmt = $conn->prepare($qb->getSQL());
+        if (isset($params['search'])) {
+            $stmt->bindValue('search', $params['search']);
+        }
+        $stmt->execute();
         $rows = $stmt->fetchAll();
 
         $markers = array();
@@ -205,15 +269,24 @@ class Issue extends AbstractRepository
             $params['bounds']['ne']['latitude'],
             self::SRID_WGS84
         );
-        $sdoInside = sprintf('SDO_INSIDE(i.GEO_POINT, %s) = \'TRUE\'', $sdoRect);
-        return $this->getMarkersCountQb($params)
+        $sdoInside = sprintf('SDO_INSIDE(i.GEO_POINT, %s)', $sdoRect);
+        $qb = $this->getMarkersCountQb($params);
+
+        $where = $sdoInside;
+        if (isset($params['search'])) {
+            $where = $qb->expr()->andX(
+                $qb->expr()->eq($sdoInside, "'TRUE'"),
+                $qb->expr()->eq('NLS_LOWER(i.SUMMARY)', ':search')
+            );
+        }
+        return $qb
             ->select(array(
                 'i.ID',
                 'i.SUMMARY',
                 'i.LATITUDE',
                 'i.LONGITUDE',
             ))
-            ->where($sdoInside);
+            ->where($where);
     }
 
     /**
@@ -243,7 +316,11 @@ class Issue extends AbstractRepository
     {
         $conn = $this->getConnection();
         $qb   = $this->getMarkersForLocalQb($params);
-        $stmt = $conn->executeQuery($qb->getSQL());
+        $stmt = $conn->prepare($qb->getSQL());
+        if (isset($params['search'])) {
+            $stmt->bindValue('search', $params['search']);
+        }
+        $stmt->execute();
         $rows = $stmt->fetchAll();
 
         $markers = array();

@@ -1,10 +1,12 @@
 {% extends 'layout/layout.twig' %}
+{% do headLink()
+.appendStylesheet(basePath() ~ '/js/select2/select2.css') %}
 {% do
-    headScript()
-        .appendFile('//maps.googleapis.com/maps/api/js?key=AIzaSyBygCnThX_0os3vwPheCEhLQZq3WuhePQM&sensor=false')
-        .appendFile('/js/markerclusterer_packed.js')
-        .appendFile('/js/main.js')
-%}
+headScript()
+.appendFile('//maps.googleapis.com/maps/api/js?key=AIzaSyBygCnThX_0os3vwPheCEhLQZq3WuhePQM&sensor=false')
+.appendFile('/js/markerclusterer_packed.js')
+.appendFile('/js/select2/select2.min.js')
+.appendFile('/js/main.js') %}
 {% block content %}
     <div class="map-container">
         <div id="map-canvas"></div>
