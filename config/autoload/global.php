@@ -14,7 +14,7 @@
 return array(
     'db'              => array(
         'driver'     => 'Oci8',
-        'connection' => 'test.insee.pl/PDBORCL',
+        'connection' => 'host.example.org/PDBORCL',
         'username'   => 'SPDB',
         'password'   => 'SPDB',
         'charset'    => 'AL32UTF8',
@@ -47,7 +47,7 @@ return array(
                     'host'     => '', //override to work with oci8connect
                     'user'     => 'SPDB',
                     'password' => 'SPDB',
-                    'dbname'   => 'test.insee.pl/PDBORCL',
+                    'dbname'   => 'host.example.org/PDBORCL',
                     'service'  => true,
                     'charset'  => 'AL32UTF8',
                 )
